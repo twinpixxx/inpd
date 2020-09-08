@@ -5,9 +5,9 @@ cPci_device::cPci_device() {}
 
 cPci_device::~cPci_device()
 {
-	this->vendorID.erase(this->vendorID.begin(), this->vendorID.end());
-	this->deviceID.erase(this->deviceID.begin(), this->deviceID.end());
-	this->deviceMFG.erase(this->deviceMFG.begin(), this->deviceMFG.end());
+	this->vendorID.clear();
+	this->deviceID.clear();
+	this->deviceMFG.clear();
 }
 
 void cPci_device::add(std::string props_buffer, std::string MFG)

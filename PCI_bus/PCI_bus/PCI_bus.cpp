@@ -15,13 +15,13 @@
 int main() {
 
     // get device info handler for PCI enumerator
-    HDEVINFO DeviceInfoSetHadler = SetupDiGetClassDevs(
+    HDEVINFO DeviceInfoSetHandler = SetupDiGetClassDevs(
         NULL,  // Class GUID
         "PCI", // Enumerator
         NULL,  // hwndParent
         DIGCF_ALLCLASSES | DIGCF_PRESENT); // Flags
 
-    if (DeviceInfoSetHadler == INVALID_HANDLE_VALUE)
+    if (DeviceInfoSetHandler == INVALID_HANDLE_VALUE)
     {
         std::cout << "Error while loading device info" << std::endl;
         return 1;
@@ -40,7 +40,7 @@ int main() {
 
 
     while (SetupDiEnumDeviceInfo(
-        DeviceInfoSetHadler,
+        DeviceInfoSetHandler,
         DeviceIndex,
         &DeviceInfoData)) {
 
@@ -50,7 +50,7 @@ int main() {
         // Get SPDRP_HARDWAREID:
         // REG_MULTI_SZ string that contains the list of hardware IDs for a device. 
         SetupDiGetDeviceRegistryProperty(
-            DeviceInfoSetHadler,		// Device Info Set
+            DeviceInfoSetHandler,		// Device Info Set
             &DeviceInfoData,			// Device Info Data
             SPDRP_HARDWAREID,			// Propetry	
             NULL,						// Property Reg Data Type
@@ -58,8 +58,10 @@ int main() {
             512,						// Property Buffer Size 
             NULL);						// Required Size
 
+        // Get SPDRP_MFG:
+        // REG_SZ string that contains the name of the device manufacturer. 
         SetupDiGetDeviceRegistryProperty(
-            DeviceInfoSetHadler, 
+            DeviceInfoSetHandler,
             &DeviceInfoData,
             SPDRP_MFG, 
             NULL, 
@@ -71,13 +73,10 @@ int main() {
         cPci_device device;
         device.add(props_buffer, MFG);
         deviceList.push_back(device);
-    }
+        
 
-    for (size_t i = 0; i < 512; i++)
-    {
-        std::cout << props_buffer[i];
+        device.~cPci_device();
     }
-
     std::cout << "number of devices:" << deviceList.size() << std::endl;
     
     std::list<cPci_device>::iterator it;
@@ -87,6 +86,8 @@ int main() {
             << it->getDeviceID() << " DeviceMFG: " << it->getDeviceMFG() << std::endl;
         std::cout << "\n\n";
     }
+
+    SetupDiDestroyDeviceInfoList(DeviceInfoSetHandler);
 
     return 0;
 }
