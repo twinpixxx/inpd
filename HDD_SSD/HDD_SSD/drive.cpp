@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <Windows.h>
 #include <ntddscsi.h>
+#include <string>
 
 using namespace std;
 
@@ -74,12 +75,12 @@ void GetSize(HANDLE dhandle, int counter)
 		}
 	}
 	cout.setf(ios::left);
-	cout << setw(8) << "Disk"
+	cout
 		<< setw(16) << "Total space[Gb]"
 		<< setw(16) << "Free space[Gb]"
 		<< setw(16) << "Busy space[Gb]" << endl;
 
-	cout << setw(8) << resultpath
+	cout
 		<< setw(16) << (driveSize / 1048576 / 1024)
 		<< setw(16) << (diskFreeSpace.QuadPart / 1048576 / 1024)
 		<< setw(16) << ((driveSize - diskFreeSpace.QuadPart) / 1048576 / 1024)
@@ -199,23 +200,42 @@ void getAtaSupportStandarts(HANDLE diskHandle) {
 
 int main() {
 
+	int counter = 0;
+
 	STORAGE_PROPERTY_QUERY storagePropertyQuery; //properties query of a storage device or adapter
 	storagePropertyQuery.QueryType = PropertyStandardQuery; // flags indicating the type of query 
 	storagePropertyQuery.PropertyId = StorageDeviceProperty; // Indicates whether the caller is requesting a device descriptor
 
-	HANDLE diskHandle = CreateFile("//./PhysicalDrive0", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
-	if (diskHandle == INVALID_HANDLE_VALUE) {
-		cout << GetLastError();
-		system("pause");
-		return -1;
+	while (true)
+	{
+		string path = "\\\\.\\PhysicalDrive" + to_string(counter);
+
+		HANDLE diskHandle = CreateFile(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
+		if (diskHandle == INVALID_HANDLE_VALUE) {
+			if (GetLastError() == 5)
+			{
+				cout << "Access denied" << endl;
+			}
+			else if (GetLastError() == 2) {
+				cout << "Can not get disk handle" << endl;
+			}
+			system("pause");
+			return -1;
+		}
+
+		getDeviceInfo(diskHandle, storagePropertyQuery);
+		getMemoryTransferMode(diskHandle, storagePropertyQuery);
+		getAtaSupportStandarts(diskHandle);
+		GetSize(diskHandle, 0);
+
+		cout << "----------------------------------------" << endl;
+
+		CloseHandle(diskHandle);
+
+		counter++;
 	}
 
-	getDeviceInfo(diskHandle, storagePropertyQuery);
-	getMemoryTransferMode(diskHandle, storagePropertyQuery);
-	getAtaSupportStandarts(diskHandle);
-	GetSize(diskHandle, 0);
 
-	CloseHandle(diskHandle);
-	getchar();
+	system("pause");
 	return 0;
 }
