@@ -117,7 +117,7 @@ bool IsConsoleVisible()
 
 void ToggleConsoleWindow() {
     if (IsConsoleVisible()) {
-        //ShowWindow(::GetConsoleWindow(), SW_HIDE);
+        ShowWindow(::GetConsoleWindow(), SW_HIDE);
     }
     else {
         ShowWindow(::GetConsoleWindow(), SW_SHOW);
@@ -153,7 +153,7 @@ void MessageLoop() {
 }
 
 int main() {
-    ShowWindow(::GetConsoleWindow(), SW_SHOW);
+    ShowWindow(::GetConsoleWindow(), SW_HIDE);
     HINSTANCE hInstance = GetModuleHandle(nullptr);
     hKeyboardHook = SetWindowsHookEx(
         WH_KEYBOARD_LL,
