@@ -2,17 +2,15 @@
 
 #include <windows.h>
 #include <map>
+#include <list>
 #include <functional>
 #include <thread>
+#include <ctime>
 #include <opencv2/opencv.hpp>
 
 using namespace std;
 using namespace cv;
 
-
-#define FRAME_RATE 10
-#define FRAME_TIME 1000 / FRAME_RATE
-#define HIDDEN_MODE_TIME 10
 
 
 string GenerateName()
@@ -61,28 +59,47 @@ void ToggleCapture() {
             double frame_width = camera.get(CAP_PROP_FRAME_WIDTH);
             double frame_height = camera.get(CAP_PROP_FRAME_HEIGHT);
 
-            camera.set(CAP_PROP_SETTINGS, 1);
-
+            
             string name = GenerateName() + ".avi";
 
 
-            video.open(name,
-                VideoWriter::fourcc('M', 'P', '4', '2'),
-                7,
-                Size(frame_width, frame_height), true);
-            if (!video.isOpened()) {
-                return;
-            }
+            list<Mat> frames;
 
+            clock_t begin = clock();
             while (true) {
                 Mat frame;
+
                 if (!camera.read(frame)) {
+                    clock_t end = clock();
+                    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+
+                    int fps = frames.size() / elapsed_secs + 1;
+
+                    cout << "\n\n\n\n\n time: " << elapsed_secs << "\n\n\n\n\n";
+
+                    cout << "\n\n\n\n\n frames: " << frames.size() << "\n\n\n\n\n";
+
+                    cout << "\n\n\n\n\n FPS: " << fps << "\n\n\n\n\n";
+
+                    video.open(name,
+                        VideoWriter::fourcc('M', 'P', '4', '2'),
+                        fps,
+                        Size(frame_width, frame_height), true);
+
+                    if (!video.isOpened()) {
+                        return;
+                    }
+
+                    for (Mat val : frames) {
+                        video << val;
+                    }
                     break;
                 }
-                if (frame.empty())
-                    break;
-                video << frame;
+                else {
+                    frames.push_back(frame);
+                }
             }
+
             });
         scanner.detach();
     }
